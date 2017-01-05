@@ -6,6 +6,12 @@
 #include <stdio.h>
 #include <iostream>
 
+//write a program that uses a command line argument to size arrays (malloc'd'). Add the timing code. 
+//Write a function AddVexcSerialCpu(int *a, int *b, int *c, int size);
+//write a loop that runbs 100 times summing uyp (so you can take an average) the exexcution time of just addveccpu print, array size\t time for address
+//frree the arrays
+//write function to filla &b with smallish rand numbers
+
 cudaError_t addWithCuda(int *c, const int *a, const int *b, unsigned int size);
 
 __global__ void addKernel(int *c, const int *a, const int *b)
@@ -16,7 +22,7 @@ __global__ void addKernel(int *c, const int *a, const int *b)
 
 using namespace std;
 
-int main()
+int main(int argc, char* argv [])
 {
 	
     const int arraySize = 5;
