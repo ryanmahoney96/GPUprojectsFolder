@@ -2,9 +2,12 @@
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
 
+#include "../highPerformanceTimer/highPerformanceTimer.h"
+
 #include <iostream>
 #include <stdlib.h>
 #include <time.h>
+#include <omp.h>
 //#include <string>
 
 //use alt+b, u to build only this project
@@ -31,6 +34,12 @@ int main(int argc, char* argv[]) {
 	
 	try {
 
+		HighPrecisionTime htp;
+		cudaError_t cudaStatus;
+
+		double htp_ret = 0.0;
+		int iterations = 100;
+
 		//if there is a command line argument, set the ouput variable to it
 		if (argc > 1) {
 			size_of_array = atoi(argv[1]);
@@ -44,17 +53,52 @@ int main(int argc, char* argv[]) {
 		if (!allocMemory(&a, &b, &c, size_of_array)) {
 			throw("Error Allocating Memory");
 		}
-	
-		
-		for (int i = 0; i < size_of_array; i++) {
-			a[i] = rand() % 300 + 300;
-			b[i] = rand() % 300;
-			c[i] = 0;
+
+		//"start" the timer
+		htp.TimeSinceLastCall();
+
+		//add work here
+
+//using omp to use as many cores as possible
+#pragma omp parallel for
+		for (int i = 0; i < (size_of_array * iterations); i++) {
+
+
+			//for (int i = 0; i < size_of_array; i++) {
+			a[i / size_of_array] = rand();
+			b[i / size_of_array] = rand();
+			c[i / size_of_array] = 0;
+			//}
+
+			//clock the timer here / store here
+			if (i % size_of_array == 0) {
+
+				htp_ret += htp.TimeSinceLastCall();
+			}
 		}
 
-		cout << "A: " << a[0] << endl;
+
+		//average here
+		htp_ret = htp_ret / iterations;
+
+		/*htp.TimeSinceLastCall();
+
+		for (int i = 0; i < size_of_array; i++) {
+			c[i] = a[i] + b[i];
+		}*/
+
+		// cudaDeviceReset must be called before exiting in order for profiling and
+		// tracing tools such as Nsight and Visual Profiler to show complete traces.
+		cudaStatus = cudaDeviceReset();
+		if (cudaStatus != cudaSuccess) {
+			throw("cudaDeviceReset failed!");
+		}
+
+		cout << "The average run was: " << htp_ret << endl;
+
+		/*cout << "A: " << a[0] << endl;
 		cout << "B: " << b[0] << endl;
-		cout << "C: " << c[0] << endl;
+		cout << "C: " << c[0] << endl;*/
 
 	}
 
