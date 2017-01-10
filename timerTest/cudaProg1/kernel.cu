@@ -19,6 +19,14 @@ typedef int ourVar_t;
 bool allocMemory(ourVar_t** a, ourVar_t** b, ourVar_t** c, int size, int size_of_var = sizeof(ourVar_t));
 void freeMemory(ourVar_t* a, ourVar_t* b, ourVar_t* c);
 
+//double fillArrays(ourVar_t* a, ourVar_t* b, ourVar_t* c, int size_of_array, int iterations);
+void fillArray(ourVar_t* a, int size_of_array);
+void fill_C_Array(ourVar_t* a, int size_of_array);
+
+void printArrays(ourVar_t* a, ourVar_t* b, ourVar_t* c, int size_of_array);
+
+const int max_num = 15;
+
 int main(int argc, char* argv[]) {
 
 	cout << endl;
@@ -54,29 +62,20 @@ int main(int argc, char* argv[]) {
 			throw("Error Allocating Memory");
 		}
 
-		//"start" the timer
 		htp.TimeSinceLastCall();
 
-		//add work here
-
-//using omp to use as many cores as possible
 #pragma omp parallel for
-		for (int i = 0; i < (size_of_array * iterations); i++) {
+		for (int i = 0; i < iterations; i++) {
 
+			fillArray(a, size_of_array);
+			fillArray(b, size_of_array);
+			fill_C_Array(c, size_of_array);
 
-			//for (int i = 0; i < size_of_array; i++) {
-			a[i / size_of_array] = rand();
-			b[i / size_of_array] = rand();
-			c[i / size_of_array] = 0;
-			//}
+			htp_ret += htp.TimeSinceLastCall();
 
-			//clock the timer here / store here
-			if (i % size_of_array == 0) {
-
-				htp_ret += htp.TimeSinceLastCall();
-			}
 		}
 
+		//htp_ret = fillArrays(a, b, c, size_of_array, iterations);
 
 		//average here
 		htp_ret = htp_ret / iterations;
@@ -93,12 +92,11 @@ int main(int argc, char* argv[]) {
 		if (cudaStatus != cudaSuccess) {
 			throw("cudaDeviceReset failed!");
 		}
+		
+		printArrays(a, b, c, size_of_array);
 
 		cout << "The average run was: " << htp_ret << endl;
 
-		/*cout << "A: " << a[0] << endl;
-		cout << "B: " << b[0] << endl;
-		cout << "C: " << c[0] << endl;*/
 
 	}
 
@@ -143,4 +141,87 @@ void freeMemory(ourVar_t* a, ourVar_t* b, ourVar_t* c) {
 	if (c != nullptr) {
 		free(c);
 	}
+}
+
+//double fillArrays(ourVar_t* a, ourVar_t* b, ourVar_t* c, int size_of_array, int iterations) {
+//
+//	double ret = 0.0;
+//	HighPrecisionTime htp;
+//
+//	//"start" the timer
+//	htp.TimeSinceLastCall();
+//
+//	//using omp to use as many cores as possible
+//#pragma omp parallel for
+//	for (int i = 0; i < iterations; i++) {
+//
+//		//optimized version of for loop: use a while loop with pointers
+//		
+//		while (a < &a[size_of_array]) {
+//			*a = rand();
+//			*b = rand();
+//			*c = 0;
+//			++a;
+//			++b;
+//			++c;
+//		}
+//
+//		//take the time after each fill (averaged afterward)
+//		ret += htp.TimeSinceLastCall();
+//
+//	}
+//
+//	//using omp to use as many cores as possible
+//#pragma omp parallel for
+//	for (int i = 0; i < iterations; i++) {
+//
+//		for (int j = 0; j < size_of_array; j++) {
+//
+//			a[j] = rand();
+//			b[j] = rand();
+//			c[j] = 0;
+//		}
+//
+//		//take the time after each fill (averaged afterward)
+//		ret += htp.TimeSinceLastCall();
+//
+//	}
+//
+//	return ret;
+//}
+
+void fillArray(ourVar_t* a, int size_of_array) {
+
+	ourVar_t* pa = a;
+
+	while (pa < &a[size_of_array]) {
+		*pa = rand() % max_num;
+
+		++pa;
+
+	}
+
+}
+
+void fill_C_Array(ourVar_t* a, int size_of_array) {
+
+	ourVar_t* pa = a;
+
+	while (pa < &a[size_of_array]) {
+		*pa = 0;
+
+		++pa;
+
+	}
+
+}
+
+void printArrays(ourVar_t* a, ourVar_t* b, ourVar_t* c, int size_of_array) {
+
+	for (int i = 0; i < size_of_array; i++) {
+
+		cout << a[i] << " : " << b[i] << " : " << c[i] << endl;
+
+	}
+
 }
