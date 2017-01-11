@@ -16,14 +16,29 @@ using namespace std;
 
 typedef int ourVar_t;
 
-bool allocMemory(ourVar_t** a, ourVar_t** b, ourVar_t** c, int size, int size_of_var = sizeof(ourVar_t));
-void freeMemory(ourVar_t* a, ourVar_t* b, ourVar_t* c);
+void CPUTest();
+
+bool allocCPUMemory(ourVar_t** a, ourVar_t** b, ourVar_t** c, int size, int size_of_var = sizeof(ourVar_t));
+void freeCPUMemory(ourVar_t* a, ourVar_t* b, ourVar_t* c);
 
 //double fillArrays(ourVar_t* a, ourVar_t* b, ourVar_t* c, int size_of_array, int iterations);
 void fillArray(ourVar_t* a, int size_of_array);
 void fill_C_Array(ourVar_t* a, int size_of_array);
 
 void printArrays(ourVar_t* a, ourVar_t* b, ourVar_t* c, int size_of_array);
+
+cudaError_t GPUTest();
+
+__global__ void addKernel(ourVar_t *c, ourVar_t *a, ourVar_t *b)
+{
+	int i = blockIdx.x * blockDim.x + threadIdx.x;
+	//int i = threadIdx.x;
+
+	c[i] = a[i] + b[i];
+}
+
+int size_of_array = 5;
+int iterations = 100;
 
 const int max_num = 15;
 
@@ -33,78 +48,40 @@ int main(int argc, char* argv[]) {
 
 	srand(time(NULL));
 
-	int size_of_array = 5;
-
-	//press alt+shift+(arrow key) to vertical edit
-	ourVar_t* a = nullptr;
-	ourVar_t* b = nullptr;
-	ourVar_t* c = nullptr;
+	//addKernel, The grid size, the block size, the vecs to add
+	//    addKernel<<<1, size>>>(dev_c, dev_a, dev_b);
+	//int i = blockIDx.x * blockDimx.x + threadIdx.x;
 	
 	try {
-
-		HighPrecisionTime htp;
-		cudaError_t cudaStatus;
-
-		double htp_ret = 0.0;
-		int iterations = 100;
 
 		//if there is a command line argument, set the ouput variable to it
 		if (argc > 1) {
 			size_of_array = atoi(argv[1]);
+			cout << "The size of the array is " << size_of_array << endl;
+
+
+			if (argc > 2) {
+				iterations = atoi(argv[2]);
+				cout << "The number of iterations is " << iterations << endl;
+			}
+			else {
+				cout << "The number of iterations is 100" << endl;
+			}
 		}
 		else {
-			cout << "No Commmand Line Argument: Size of Array Defaulting to 5" << endl;
-		}
-
-		cout << "argc: " << argc << "\nargv: " << size_of_array << endl;
-
-		if (!allocMemory(&a, &b, &c, size_of_array)) {
-			throw("Error Allocating Memory");
-		}
-
-		htp.TimeSinceLastCall();
-
-#pragma omp parallel for
-		for (int i = 0; i < iterations; i++) {
-
-			fillArray(a, size_of_array);
-			fillArray(b, size_of_array);
-			fill_C_Array(c, size_of_array);
-
-			htp_ret += htp.TimeSinceLastCall();
-
-		}
-
-		//htp_ret = fillArrays(a, b, c, size_of_array, iterations);
-
-		//average here
-		htp_ret = htp_ret / iterations;
-
-		/*htp.TimeSinceLastCall();
-
-		for (int i = 0; i < size_of_array; i++) {
-			c[i] = a[i] + b[i];
-		}*/
-
-		// cudaDeviceReset must be called before exiting in order for profiling and
-		// tracing tools such as Nsight and Visual Profiler to show complete traces.
-		cudaStatus = cudaDeviceReset();
-		if (cudaStatus != cudaSuccess) {
-			throw("cudaDeviceReset failed!");
+			cout << "No Commmand Line Argument: Size of Array Defaulting to 5, Number of Iterations deafulting to 100" << endl;
 		}
 		
-		printArrays(a, b, c, size_of_array);
-
-		cout << "The average run was: " << htp_ret << endl;
-
+		cout << endl;
+		
+		CPUTest();
+		GPUTest();
 
 	}
 
 	catch (char * err) {
 		cerr << err << endl;
 	}
-
-	freeMemory(a, b, c);
 
 #ifdef _WIN32 || _WIN64
 	//system("pause");
@@ -113,7 +90,75 @@ int main(int argc, char* argv[]) {
 	return 0;
 }
 
-bool allocMemory(ourVar_t** a, ourVar_t** b, ourVar_t** c, int size, int size_of_var) {
+
+void CPUTest() {
+
+	//press alt+shift+(arrow key) to vertical edit
+	ourVar_t* a = nullptr;
+	ourVar_t* b = nullptr;
+	ourVar_t* c = nullptr;
+
+	HighPrecisionTime full;
+	HighPrecisionTime avg;
+	HighPrecisionTime summing;
+
+	double fullTime = 0.0;
+	double avgTime = 0.0;
+	double sumTime = 0.0;
+
+	if (!allocCPUMemory(&a, &b, &c, size_of_array)) {
+		throw("Error Allocating Memory");
+	}
+
+
+	avg.TimeSinceLastCall();
+
+#pragma omp parallel for
+	for (int i = 0; i < iterations; i++) {
+
+		fillArray(a, size_of_array);
+		fillArray(b, size_of_array);
+		fill_C_Array(c, size_of_array);
+
+		avgTime += avg.TimeSinceLastCall();
+
+	}
+
+	full.TimeSinceLastCall();
+
+	summing.TimeSinceLastCall();
+
+	for (int times = 0; times < iterations; times++) {
+		
+		for (int i = 0; i < size_of_array; i++) {
+			c[i] = a[i] + b[i];
+		}
+
+		sumTime += summing.TimeSinceLastCall();
+	}
+
+	//printArrays(a, b, c, size_of_array);
+
+	freeCPUMemory(a, b, c);
+
+	fullTime = full.TimeSinceLastCall();
+
+	//average here
+	avgTime = avgTime / iterations;
+	sumTime = sumTime / iterations;
+	
+	cout << "The average time for the CPU to fill all three vectors was: " << avgTime << endl;
+	cout << "   ------------------------   " << endl << endl;
+
+	cout << "The average time it took the CPU to sum the vectors was: " << sumTime << endl;
+	cout << "The full CPU run (summing + freeing) was: " << fullTime << endl;
+
+	cout << endl;
+}
+
+
+
+bool allocCPUMemory(ourVar_t** a, ourVar_t** b, ourVar_t** c, int size, int size_of_var) {
 
 	bool retVal = true;
 
@@ -130,7 +175,7 @@ bool allocMemory(ourVar_t** a, ourVar_t** b, ourVar_t** c, int size, int size_of
 	return retVal;
 }
 
-void freeMemory(ourVar_t* a, ourVar_t* b, ourVar_t* c) {
+void freeCPUMemory(ourVar_t* a, ourVar_t* b, ourVar_t* c) {
 	
 	if (a != nullptr) {
 		free(a);
@@ -142,53 +187,6 @@ void freeMemory(ourVar_t* a, ourVar_t* b, ourVar_t* c) {
 		free(c);
 	}
 }
-
-//double fillArrays(ourVar_t* a, ourVar_t* b, ourVar_t* c, int size_of_array, int iterations) {
-//
-//	double ret = 0.0;
-//	HighPrecisionTime htp;
-//
-//	//"start" the timer
-//	htp.TimeSinceLastCall();
-//
-//	//using omp to use as many cores as possible
-//#pragma omp parallel for
-//	for (int i = 0; i < iterations; i++) {
-//
-//		//optimized version of for loop: use a while loop with pointers
-//		
-//		while (a < &a[size_of_array]) {
-//			*a = rand();
-//			*b = rand();
-//			*c = 0;
-//			++a;
-//			++b;
-//			++c;
-//		}
-//
-//		//take the time after each fill (averaged afterward)
-//		ret += htp.TimeSinceLastCall();
-//
-//	}
-//
-//	//using omp to use as many cores as possible
-//#pragma omp parallel for
-//	for (int i = 0; i < iterations; i++) {
-//
-//		for (int j = 0; j < size_of_array; j++) {
-//
-//			a[j] = rand();
-//			b[j] = rand();
-//			c[j] = 0;
-//		}
-//
-//		//take the time after each fill (averaged afterward)
-//		ret += htp.TimeSinceLastCall();
-//
-//	}
-//
-//	return ret;
-//}
 
 void fillArray(ourVar_t* a, int size_of_array) {
 
@@ -224,4 +222,128 @@ void printArrays(ourVar_t* a, ourVar_t* b, ourVar_t* c, int size_of_array) {
 
 	}
 
+}
+
+cudaError_t GPUTest() {
+
+	ourVar_t* a = nullptr;
+	ourVar_t* b = nullptr;
+	ourVar_t* c = nullptr;
+
+	if (!allocCPUMemory(&a, &b, &c, size_of_array)) {
+		throw("Error Allocating Memory");
+	}
+
+#pragma omp parallel for
+	for (int i = 0; i < iterations; i++) {
+
+		fillArray(a, size_of_array);
+		fillArray(b, size_of_array);
+		fill_C_Array(c, size_of_array);
+
+	}
+
+	HighPrecisionTime full;
+	HighPrecisionTime summing;
+
+	double fullTime = 0.0;
+	double sumTime = 0.0;
+	
+	int *dev_a = 0;
+	int *dev_b = 0;
+	int *dev_c = 0;
+	cudaError_t cudaStatus;
+
+	cudaDeviceProp prop;
+	cudaGetDeviceProperties(&prop, 0);
+
+	int maxThreadsPerBlock = prop.maxThreadsPerBlock;
+	int numberOfBlocks = size_of_array / maxThreadsPerBlock + 1;
+	
+	full.TimeSinceLastCall();
+
+	// Choose which GPU to run on, change this on a multi-GPU system.
+	cudaStatus = cudaSetDevice(0);
+	if (cudaStatus != cudaSuccess) {
+		throw("cudaSetDevice failed!  Do you have a CUDA-capable GPU installed?");
+		goto Error;
+	}
+
+	// Allocate GPU buffers for three vectors (two input, one output)    .
+	cudaStatus = cudaMalloc((void**)&dev_c, size_of_array * sizeof(ourVar_t));
+	if (cudaStatus != cudaSuccess) {
+		throw("cudaMalloc-1 failed!");
+		goto Error;
+	}
+
+	cudaStatus = cudaMalloc((void**)&dev_a, size_of_array * sizeof(ourVar_t));
+	if (cudaStatus != cudaSuccess) {
+		throw("cudaMalloc-2 failed!");
+		goto Error;
+	}
+
+	cudaStatus = cudaMalloc((void**)&dev_b, size_of_array * sizeof(ourVar_t));
+	if (cudaStatus != cudaSuccess) {
+		throw("cudaMalloc-3 failed!");
+		goto Error;
+	}
+
+	// Copy input vectors from host memory to GPU buffers.
+	cudaStatus = cudaMemcpy(dev_a, a, size_of_array * sizeof(ourVar_t), cudaMemcpyHostToDevice);
+	if (cudaStatus != cudaSuccess) {
+		throw("cudaMemcpy-1 failed!");
+		goto Error;
+	}
+
+	cudaStatus = cudaMemcpy(dev_b, b, size_of_array * sizeof(ourVar_t), cudaMemcpyHostToDevice);
+	if (cudaStatus != cudaSuccess) {
+		throw("cudaMemcpy-2 failed!");
+		goto Error;
+	}
+
+	summing.TimeSinceLastCall();
+
+	// Launch a kernel on the GPU with one thread for each element.
+	//addKernel, The grid size, the block size, the vecs to add
+	for (int i = 0; i < iterations; i++) {
+		addKernel <<< numberOfBlocks, maxThreadsPerBlock >>> (dev_c, dev_a, dev_b);
+		sumTime += summing.TimeSinceLastCall();
+	}
+	
+
+	// Check for any errors launching the kernel
+	cudaStatus = cudaGetLastError();
+	if (cudaStatus != cudaSuccess) {
+		fprintf(stderr, "addKernel launch failed: %s\n", cudaGetErrorString(cudaStatus));
+		goto Error;
+	}
+
+	// cudaDeviceSynchronize waits for the kernel to finish, and returns
+	// any errors encountered during the launch.
+	cudaStatus = cudaDeviceSynchronize();
+	if (cudaStatus != cudaSuccess) {
+		fprintf(stderr, "cudaDeviceSynchronize returned error code %d after launching addKernel!\n", cudaStatus);
+		goto Error;
+	}
+
+	// Copy output vector from GPU buffer to host memory.
+	cudaStatus = cudaMemcpy(c, dev_c, size_of_array * sizeof(ourVar_t), cudaMemcpyDeviceToHost);
+	if (cudaStatus != cudaSuccess) {
+		throw("cudaMemcpy-3 failed!");
+		goto Error;
+	}
+
+	fullTime = full.TimeSinceLastCall();
+	sumTime = sumTime / iterations;
+	
+	cout << "The average time it took the GPU to sum the vectors was: " << sumTime << endl;
+	cout << "The full GPU run (allocating + copying + summing) was: " << fullTime << endl;
+
+
+Error:
+	cudaFree(dev_c);
+	cudaFree(dev_a);
+	cudaFree(dev_b);
+
+	return cudaStatus;
 }
