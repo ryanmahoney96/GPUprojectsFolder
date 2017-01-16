@@ -15,10 +15,6 @@ using namespace std;
 
 typedef unsigned char uchar;
 
-/*struct threshData {
-	int* threshNum;
-	Mat* image;
-};*/
 
 __global__ void threshKernel(uchar* imageData, size_t size_of_image, int threshold)
 {
@@ -42,12 +38,12 @@ __global__ void threshKernel(uchar* imageData, size_t size_of_image, int thresho
 double CPUthreshold (int threshold, int w, int height, unsigned char* data);
 double GPUthreshold(int threshold, Mat* image, Mat& renderedImage);
 
-//void on_trackbar (int thresholdNum, void* td);
+void on_trackbar (int thresholdNum, void*);
 
 int main(int argc, char * argv[])
 {
 	int thresholdNum = 128;
-	//const int threshMAX = 255;
+	const int threshMAX = 255;
 
 	try {
 		if (argc != 2) {
@@ -58,10 +54,6 @@ int main(int argc, char * argv[])
 		Mat image;
 		//read the file from the command line
 		image = imread(argv[1], CV_LOAD_IMAGE_COLOR);
-
-		/*threshData td;
-		td.threshNum = &thresholdNum;
-		td.image = &image;*/
 
 		//check for an invalid input
 		//Mat.data is a pointer to the image data -> if null, no image found/useable
@@ -91,9 +83,10 @@ int main(int argc, char * argv[])
 		//the trackbar must be placed inside a window
 		//whenever the user changes the trackbar, the on_trackbar function is called
 		//trackbar name, window name, an int to change(?), a maximum value(?), and a function to call
-		//createTrackbar("Threshold Slider", "Display Window", &thresholdNum, threshMAX, on_trackbar, &td);
+		//createTrackbar("Threshold", "Display Window", &thresholdNum, threshMAX, on_trackbar);
+		//createTrackbar("Threshold", "Display Window", &thresholdNum, threshMAX, on_trackbar);
 
-		//on_trackbar(thresholdNum, &td);
+		//on_trackbar(thresholdNum, 0);
 
 		//wait for the user to enter a keystroke
 		cout << "The CPU took " << CPUTime << " seconds to render the threshold on the image" << endl;
@@ -198,8 +191,7 @@ double GPUthreshold(int threshold, Mat* image, Mat& renderedImage) {
 		fprintf(stderr, "addKernel launch failed: %s\n", cudaGetErrorString(cudaStatus));
 		goto Error;
 	}
-
-	
+		
 
 	// Copy output vector from GPU buffer to host memory.
 	cudaStatus = cudaMemcpy((void*)renderedImage.data, GPUImageData, size_of_image, cudaMemcpyDeviceToHost);
@@ -216,12 +208,7 @@ Error:
 	return renderTime;
 }
 
-/*void on_trackbar(int thresholdNum, void* td) {
+void on_trackbar(int thresholdNum, void* ) {
 
-	Mat* img = ((threshData*)td)->image;
 
-	threshold(*td->thresholdNum, img->cols, img->rows, img->data);
-
-	imshow("Display Window", *img);
-
-}*/
+}
