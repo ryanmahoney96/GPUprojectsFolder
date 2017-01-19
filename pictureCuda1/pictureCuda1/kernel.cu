@@ -8,6 +8,8 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui//highgui.hpp>
 
+#include <algorithm>
+
 #include <iostream>
 
 using namespace cv;
@@ -20,6 +22,13 @@ const char* gpuWindow = "GPU Window";
 
 Mat image;
 Mat GPUImage;
+
+__global__ void bfKernel(uchar* imageData, size_t size_of_image, int threshold)
+{
+	int i = blockIdx.x * blockDim.x + threadIdx.x;
+	
+
+}
 
 __global__ void threshKernel(uchar* imageData, size_t size_of_image, int threshold)
 {
@@ -40,7 +49,7 @@ __global__ void threshKernel(uchar* imageData, size_t size_of_image, int thresho
 
 }
 
-double cpuBoxFilter(uchar* src, uchar*& dst, int width, int height, uchar* k, int kerWidth, int kerHeight, uchar* tmp);
+double cpuBoxFilter(uchar* src, uchar*& dst, int width, int height, int* k, int kerWidth, int kerHeight, uchar* tmp);
 
 double CPUthreshold (int threshold, int w, int height, unsigned char* data);
 double GPUthreshold(int threshold, Mat* image, Mat& renderedImage);
@@ -71,7 +80,7 @@ int main(int argc, char * argv[])
 		}
 
 		//we want: rows, cols, channels
-		cout << "The image is " << image.rows << "x" << image.cols << " in dimension" << endl;
+		cout << "The image is " << image.cols << "x" << image.rows << " in dimension" << endl;
 
 		cvtColor(image, image, cv::COLOR_RGB2GRAY);
 		cout << "Image converted to Grayscale" << endl;
@@ -84,13 +93,34 @@ int main(int argc, char * argv[])
 		double CPUTime = 0;
 		double GPUTime = 0;
 
-		uchar boxKernel[] = { 1, 1, 1, 
-							  1, 3, 1, 
-							  1, 1, 1 
-							};
+		int boxKernel[361];
+		/*{
+			-1, 0, 1,
+			-2, 0, 2,
+			-1, 0, 1, 255
+		};*/
 
-		//NOTE: change hardcoded 3's, change last parameter to useful data
-		CPUTime = cpuBoxFilter(image.data, cputmp.data, image.cols, image.rows, boxKernel, 3, 3, 0);
+		/*{ 0, 0, 0, 0, 0,
+			0, 0, -1, 0, 0,
+			0, -1, 2, -1, 0,
+			0, 0, -1, 0, 0,
+			0, 0, 0, 0, 0, 255
+			};*/
+
+		for (int i = 0; i < 361; i++) {
+			boxKernel[i] = 1;
+		}
+
+		/*int dimSize = 0;
+
+		for (int i = 0; boxKernel[i] != 255; i++) {
+			dimSize++;
+		}
+
+		dimSize = sqrt(dimSize);*/
+
+		//NOTE: change last parameter to useful data
+		CPUTime = cpuBoxFilter(image.data, cputmp.data, image.cols, image.rows, boxKernel, 19, 19, 0);
 
 		//thresholds
 		//CPUTime = CPUthreshold(cpuThresholdNum, cputmp.cols, cputmp.rows, cputmp.data);
@@ -98,11 +128,13 @@ int main(int argc, char * argv[])
 
 		//create a window for display
 		namedWindow(cpuWindow, WINDOW_NORMAL);
-		namedWindow(gpuWindow, WINDOW_NORMAL);
+		//namedWindow(gpuWindow, WINDOW_NORMAL);
 
 		//show the image within the display window
+		imshow(cpuWindow, image);
+		waitKey(0);
 		imshow(cpuWindow, cputmp);
-		imshow(gpuWindow, image);
+		//imshow(gpuWindow, image);
 
 		//trackbars
 		//the trackbar must be placed inside a window
@@ -261,22 +293,24 @@ void on_gpu_trackbar(int gpuThresholdNum, void*) {
 
 // CPUTime = cpuBoxFilter(image.data, cputmp.data, image.cols, image.rows, boxKernel, 3, 3, 0);
 
-double cpuBoxFilter(uchar* src, uchar*& dst, int width, int height, uchar* k, int kerWidth, int kerHeight, uchar* tmp) {
+double cpuBoxFilter(uchar* src, uchar*& dst, int width, int height, int* k, int kerWidth, int kerHeight, uchar* tmp) {
 
 	HighPrecisionTime filter;
 	double filterTime = 0.0;
 	
 	//the sum of the prox pixels after filtering
-	double currentSum = 0.0;
+	float currentSum = 0.0f;
 
-	double avgNum = 0.0;
-	double numCells = 0;
+	float avgNum = 0.0f;
 
-	for (int it = 0; it < (numCells = kerWidth * kerHeight); it++) {
+	for (int it = 0; it < (kerWidth * kerHeight); it++) {
 		avgNum += k[it];
 	}
 
-	//avgNum = avgNum / numCells;
+	//don't divide by 0 down below
+	if (avgNum == 0) {
+		avgNum = 1;
+	}
 
 	//start on pixel
 	//find the pixels in proximity
@@ -288,31 +322,38 @@ double cpuBoxFilter(uchar* src, uchar*& dst, int width, int height, uchar* k, in
 
 	//the direction one needs to move in order to get to the desired border pixel relative to the current pixel
 	//NOTE: generalize this using the dimensions of the kernel
-	//
-	int indices [] = {
-		-(width + 1),  -width,     -(width - 1),
-		-1,                0,           +1,
-		width - 1,      width,      width + 1
-	};
+	//---> divide matrix width by 2, subtract 1. That number becomes the coefficient on width, as well as the constant 
+	//----> -(coeff*width + coeff) ...coeff--
+	//----->THIS ASSUMES 1) odd width 2) equal width & height
+
+	int coeff = kerWidth / 2;
 
 	filter.TimeSinceLastCall();
 
 	//roll through every pixel in the image using this loop
-	for (int i = width; i < (width*height - width); i++) {
+	//NOTE: needs matrix size independent update
+	for (int i = (coeff * width) + coeff; i < ((width * height) - (coeff * width) - coeff); i++) {
 
 		currentSum = 0.0;
 
-		//if edge pixel
-		if (i % width == 0 || (i % width) - 1 == 0 ) {
+		//if edge pixel -> left edge, right edge
+		if (i % width < coeff  || (i + coeff) % width < coeff) {
 			continue;
 		}
 
 		//roll through each kernel corresponding pixel surrounding the current pixel (i)
-		for (int j = 0; j < numCells; j++) {
-			currentSum += src[i + indices[j]] * k[j];
+
+		int j = 0;
+
+		for (int m = -coeff; m <= coeff; m++) {
+			for (int c = -coeff; c <= coeff; c++) {
+				//i is the current pixel. We find the pixels around i by multiplying the number of widths away the desired modifying pixel is from origin by width, plus the number of pixels horizontally
+				currentSum += src[i + (m * width + c)] * k[j];
+				j++;
+			}
 		}
 
-		dst[i] = currentSum / avgNum;
+		dst[i] = (uchar)abs((currentSum / avgNum));
 
 	}
 
