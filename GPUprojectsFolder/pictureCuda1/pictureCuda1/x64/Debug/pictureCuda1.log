@@ -1,24 +1,31 @@
 ﻿  Compiling CUDA source file kernel.cu...
   
-  C:\Users\educ\Documents\Visual Studio 2015\Projects\GPUprojectsFolder\pictureCuda1\pictureCuda1>"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\bin\nvcc.exe" -gencode=arch=compute_20,code=\"sm_20,compute_20\" --use-local-env --cl-version 2015 -ccbin "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\x86_amd64"  -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\include"  -G   --keep-dir x64\Debug -maxrregcount=0  --machine 64 --compile -cudart static  -g   -DWIN32 -DWIN64 -D_DEBUG -D_CONSOLE -D_MBCS -Xcompiler "/EHsc /W3 /nologo /Od /FS /Zi /RTC1 /MDd " -o x64\Debug\kernel.cu.obj "C:\Users\educ\Documents\Visual Studio 2015\Projects\GPUprojectsFolder\pictureCuda1\pictureCuda1\kernel.cu" 
+  C:\Users\educ\Documents\Visual Studio 2015\Projects\GPUprojectsFolder\GPUprojectsFolder\pictureCuda1\pictureCuda1>"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\bin\nvcc.exe" -gencode=arch=compute_20,code=\"sm_20,compute_20\" --use-local-env --cl-version 2015 -ccbin "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\x86_amd64"  -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\include"  -G   --keep-dir x64\Debug -maxrregcount=0  --machine 64 --compile -cudart static  -g   -DWIN32 -DWIN64 -D_DEBUG -D_CONSOLE -D_MBCS -Xcompiler "/EHsc /W3 /nologo /Od /FS /Zi /RTC1 /MDd " -o x64\Debug\kernel.cu.obj "C:\Users\educ\Documents\Visual Studio 2015\Projects\GPUprojectsFolder\GPUprojectsFolder\pictureCuda1\pictureCuda1\kernel.cu" 
 U:\opencv\build\include\opencv2/core/base.hpp(365): warning : function declared with "noreturn" does return
-C:/Users/educ/Documents/Visual Studio 2015/Projects/GPUprojectsFolder/pictureCuda1/pictureCuda1/kernel.cu(161): warning : statement is unreachable
-C:/Users/educ/Documents/Visual Studio 2015/Projects/GPUprojectsFolder/pictureCuda1/pictureCuda1/kernel.cu(167): warning : statement is unreachable
-C:/Users/educ/Documents/Visual Studio 2015/Projects/GPUprojectsFolder/pictureCuda1/pictureCuda1/kernel.cu(173): warning : statement is unreachable
-C:/Users/educ/Documents/Visual Studio 2015/Projects/GPUprojectsFolder/pictureCuda1/pictureCuda1/kernel.cu(208): warning : statement is unreachable
-C:/Users/educ/Documents/Visual Studio 2015/Projects/GPUprojectsFolder/pictureCuda1/pictureCuda1/kernel.cu(142): warning : variable "copyTime" was declared but never referenced
+C:/Users/educ/Documents/Visual Studio 2015/Projects/GPUprojectsFolder/GPUprojectsFolder/pictureCuda1/pictureCuda1/kernel.cu(28): warning : variable "i" was declared but never referenced
+C:/Users/educ/Documents/Visual Studio 2015/Projects/GPUprojectsFolder/GPUprojectsFolder/pictureCuda1/pictureCuda1/kernel.cu(63): warning : variable "cpuThresholdNum" was declared but never referenced
+C:/Users/educ/Documents/Visual Studio 2015/Projects/GPUprojectsFolder/GPUprojectsFolder/pictureCuda1/pictureCuda1/kernel.cu(64): warning : variable "gpuThresholdNum" was declared but never referenced
+C:/Users/educ/Documents/Visual Studio 2015/Projects/GPUprojectsFolder/GPUprojectsFolder/pictureCuda1/pictureCuda1/kernel.cu(66): warning : variable "threshMAX" was declared but never referenced
+C:/Users/educ/Documents/Visual Studio 2015/Projects/GPUprojectsFolder/GPUprojectsFolder/pictureCuda1/pictureCuda1/kernel.cu(212): warning : statement is unreachable
+C:/Users/educ/Documents/Visual Studio 2015/Projects/GPUprojectsFolder/GPUprojectsFolder/pictureCuda1/pictureCuda1/kernel.cu(218): warning : statement is unreachable
+C:/Users/educ/Documents/Visual Studio 2015/Projects/GPUprojectsFolder/GPUprojectsFolder/pictureCuda1/pictureCuda1/kernel.cu(224): warning : statement is unreachable
+C:/Users/educ/Documents/Visual Studio 2015/Projects/GPUprojectsFolder/GPUprojectsFolder/pictureCuda1/pictureCuda1/kernel.cu(259): warning : statement is unreachable
+C:/Users/educ/Documents/Visual Studio 2015/Projects/GPUprojectsFolder/GPUprojectsFolder/pictureCuda1/pictureCuda1/kernel.cu(193): warning : variable "copyTime" was declared but never referenced
 U:\opencv\build\include\opencv2/core/base.hpp(365): warning : function declared with "noreturn" does return
-C:/Users/educ/Documents/Visual Studio 2015/Projects/GPUprojectsFolder/pictureCuda1/pictureCuda1/kernel.cu(161): warning : statement is unreachable
-C:/Users/educ/Documents/Visual Studio 2015/Projects/GPUprojectsFolder/pictureCuda1/pictureCuda1/kernel.cu(167): warning : statement is unreachable
-C:/Users/educ/Documents/Visual Studio 2015/Projects/GPUprojectsFolder/pictureCuda1/pictureCuda1/kernel.cu(173): warning : statement is unreachable
-C:/Users/educ/Documents/Visual Studio 2015/Projects/GPUprojectsFolder/pictureCuda1/pictureCuda1/kernel.cu(208): warning : statement is unreachable
-C:/Users/educ/Documents/Visual Studio 2015/Projects/GPUprojectsFolder/pictureCuda1/pictureCuda1/kernel.cu(142): warning : variable "copyTime" was declared but never referenced
+C:/Users/educ/Documents/Visual Studio 2015/Projects/GPUprojectsFolder/GPUprojectsFolder/pictureCuda1/pictureCuda1/kernel.cu(28): warning : variable "i" was declared but never referenced
+C:/Users/educ/Documents/Visual Studio 2015/Projects/GPUprojectsFolder/GPUprojectsFolder/pictureCuda1/pictureCuda1/kernel.cu(63): warning : variable "cpuThresholdNum" was declared but never referenced
+C:/Users/educ/Documents/Visual Studio 2015/Projects/GPUprojectsFolder/GPUprojectsFolder/pictureCuda1/pictureCuda1/kernel.cu(64): warning : variable "gpuThresholdNum" was declared but never referenced
+C:/Users/educ/Documents/Visual Studio 2015/Projects/GPUprojectsFolder/GPUprojectsFolder/pictureCuda1/pictureCuda1/kernel.cu(66): warning : variable "threshMAX" was declared but never referenced
+C:/Users/educ/Documents/Visual Studio 2015/Projects/GPUprojectsFolder/GPUprojectsFolder/pictureCuda1/pictureCuda1/kernel.cu(212): warning : statement is unreachable
+C:/Users/educ/Documents/Visual Studio 2015/Projects/GPUprojectsFolder/GPUprojectsFolder/pictureCuda1/pictureCuda1/kernel.cu(218): warning : statement is unreachable
+C:/Users/educ/Documents/Visual Studio 2015/Projects/GPUprojectsFolder/GPUprojectsFolder/pictureCuda1/pictureCuda1/kernel.cu(224): warning : statement is unreachable
+C:/Users/educ/Documents/Visual Studio 2015/Projects/GPUprojectsFolder/GPUprojectsFolder/pictureCuda1/pictureCuda1/kernel.cu(259): warning : statement is unreachable
+C:/Users/educ/Documents/Visual Studio 2015/Projects/GPUprojectsFolder/GPUprojectsFolder/pictureCuda1/pictureCuda1/kernel.cu(193): warning : variable "copyTime" was declared but never referenced
 CUDACOMPILE : nvcc warning : The 'compute_20', 'sm_20', and 'sm_21' architectures are deprecated, and may be removed in a future release (Use -Wno-deprecated-gpu-targets to suppress warning).
   kernel.cu
-  highPerformanceTimer.cpp
-  pictureCuda1.vcxproj -> C:\Users\educ\Documents\Visual Studio 2015\Projects\GPUprojectsFolder\pictureCuda1\x64\Debug\pictureCuda1.exe
-  pictureCuda1.vcxproj -> C:\Users\educ\Documents\Visual Studio 2015\Projects\GPUprojectsFolder\pictureCuda1\x64\Debug\pictureCuda1.pdb (Full PDB)
-  copy "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\bin\cudart*.dll" "C:\Users\educ\Documents\Visual Studio 2015\Projects\GPUprojectsFolder\pictureCuda1\x64\Debug\"
+  pictureCuda1.vcxproj -> C:\Users\educ\Documents\Visual Studio 2015\Projects\GPUprojectsFolder\GPUprojectsFolder\pictureCuda1\x64\Debug\pictureCuda1.exe
+  pictureCuda1.vcxproj -> C:\Users\educ\Documents\Visual Studio 2015\Projects\GPUprojectsFolder\GPUprojectsFolder\pictureCuda1\x64\Debug\pictureCuda1.pdb (Full PDB)
+  copy "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\bin\cudart*.dll" "C:\Users\educ\Documents\Visual Studio 2015\Projects\GPUprojectsFolder\GPUprojectsFolder\pictureCuda1\x64\Debug\"
   C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\bin\cudart32_80.dll
   C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\bin\cudart64_80.dll
           2 file(s) copied.
