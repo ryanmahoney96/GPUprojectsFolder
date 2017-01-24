@@ -53,7 +53,11 @@ __global__ void bfKernel(uchar* src, uchar* dst, int width, int height, int* k, 
 	float avgNum = 0.0f;
 
 	for (int it = 0; it < (kerWidth * kerHeight); it++) {
+<<<<<<< HEAD
 		avgNum += k[it]; 
+=======
+		avgNum += k[it];
+>>>>>>> origin/master
 	}
 
 	//don't divide by 0 down below
