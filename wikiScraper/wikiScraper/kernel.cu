@@ -9,13 +9,19 @@
 
 using namespace std;
 
+//gigabyte = 1 << 30;
+
+#if defined(_DEBUG)
+#define GIGA 1 << 20
+#else
+#define GIGA 1 << 30
+#endif
+
 const char* filepath = "C:/Users/educ/Documents/enwiki-latest-abstract.xml";
 
-//giga = 1 << 30;
-constexpr size_t GIGA = 1 << 30;
 constexpr size_t BMSize = GIGA / 8;
 
-int main()
+int main(int argc, char* argv[])
 {
    
 	hptimer open;
@@ -28,6 +34,10 @@ int main()
 	ifstream bigFile(filepath);
 
 	try {
+		if (argc != 2) {
+
+		}
+
 		if (!bigFile.is_open()) {
 			throw("Failed to Open File");
 		}
